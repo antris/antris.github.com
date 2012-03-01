@@ -3,31 +3,19 @@
     var REMOTE = !DEBUG;
     var ready = false;
 
-    var colors = [];
+    var colors = [0,0,0,0,0];
+    var newColors;
     var bgColor;
     var planeColor;
     var cubeColors
     var cubes, plane, renderer;
 
     var setColors = function(input) {
-        colors = input.map(function(color) {
-            return parseInt(color, 16);
-        });
-
-        bgColor = colors[0];
-        planeColor = colors[1];
-        cubeColors = colors.slice(2);
-
+        newColors = input;
         if (!ready) {
             ready = true;
             APPInit();
-        } else {
-            plane.material.color.setHex(planeColor);
-            renderer.setClearColorHex(bgColor, 1.0);
         }
-        _.each(cubes, function(cube, index) {
-            cube.mesh.material.color.setHex(cubeColors[index % cubeColors.length]);
-        });
     };
 
 
@@ -106,6 +94,42 @@
             getColors: getColors
         };
 
+        var tween = function(start, end) {
+            var pad = function(str, padStr, length) {
+                while (str.length < length) {
+                    str = padStr + str;
+                }
+                return str;
+            }
+            var startHex = pad(start.toString(16), '0', 6);
+            var endHex = pad(end.toString(16), '0', 6);
+            var start = {
+                r: parseInt(startHex.substr(0, 2), 16),
+                g: parseInt(startHex.substr(2, 2), 16),
+                b: parseInt(startHex.substr(4, 2), 16)
+            };
+            var end = {
+                r: parseInt(endHex.substr(0, 2), 16),
+                g: parseInt(endHex.substr(2, 2), 16),
+                b: parseInt(endHex.substr(4, 2), 16)
+            };
+            var nudge = function(start, end) {
+                if (start < end) {
+                    return start + 1;
+                } else if (start > end) {
+                    return start - 1;
+                } else {
+                    return end;
+                }
+            };
+            var result = {
+                r: pad(nudge(start.r, end.r).toString(16), '0', 2),
+                g: pad(nudge(start.g, end.g).toString(16), '0', 2),
+                b: pad(nudge(start.b, end.b).toString(16), '0', 2)
+            };
+            return parseInt(result.r + result.g + result.b, 16);
+        };
+
         function animate(t) {
             var ct;
             _.each(cubes, function(cube) {
@@ -119,6 +143,18 @@
                 cube.mesh.scale.y = 0.2 + Math.sin(ct / 1000) * 0.1;
                 cube.mesh.scale.z = 0.2 + Math.sin(ct / 1000) * 0.1;
             });
+            if (!_.isEqual(colors, newColors)) {
+                bgColor = colors[0] = tween(colors[0], newColors[0]);
+                planeColor = colors[1] = tween(colors[1], newColors[1]);
+                cubeColors = _.map(newColors.slice(2), function(color, index) {
+                    return colors[index + 2] = tween(colors[index + 2], color);
+                });
+                plane.material.color.setHex(planeColor);
+                renderer.setClearColorHex(bgColor, 1.0);        
+                _.each(cubes, function(cube, index) {
+                    cube.mesh.material.color.setHex(cubeColors[index % cubeColors.length]);
+                });
+            }
             renderer.render(scene, camera);
             window.requestAnimationFrame(animate, renderer.domElement);
         };
@@ -136,11 +172,13 @@
         evt.preventDefault();
         getColors();
         repaintButton.onclick = null;
-        this.innerText = 'Mixing...';
+        this.innerText = 'Mixing paints...';
     };
     // JSONP callback for getting a palette from colourlovers API
     var catchPalette = window.catchPalette = function(arr) {
-        setColors(arr[0].colors);
+        setColors(arr[0].colors.map(function(color) {
+            return parseInt(color, 16);
+        }));
         repaintButton.innerText = 'Repaint!';
         repaintButton.onclick = repaintHandler;
     };
@@ -149,13 +187,7 @@
         getColors();
     } else {
         setColors({
-            colors: [
-                '695E50',
-                '577A5F',
-                'BEC428',
-                '9571B8',
-                'BE87F1'
-            ]
+            colors: [6905424, 5732959, 12502056, 9793976, 12486641]
         });
     }
 
