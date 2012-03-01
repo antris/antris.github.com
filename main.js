@@ -172,14 +172,14 @@
         evt.preventDefault();
         getColors();
         repaintButton.onclick = null;
-        this.innerText = 'Mixing paints...';
+        this.innerHTML = 'Mixing paints...';
     };
     // JSONP callback for getting a palette from colourlovers API
     var catchPalette = window.catchPalette = function(arr) {
         setColors(arr[0].colors.map(function(color) {
             return parseInt(color, 16);
         }));
-        repaintButton.innerText = 'Repaint!';
+        repaintButton.innerHTML = 'Repaint!';
         repaintButton.onclick = repaintHandler;
     };
 
