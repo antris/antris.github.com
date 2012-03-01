@@ -1,26 +1,7 @@
-var setColors;
-
 (function() {
     var DEBUG = false;
     var REMOTE = !DEBUG;
     var ready = false;
-    var pageTitle = document.getElementsByTagName('h1')[0].innerText;
-    var links = [];
-    var linksElement = document.getElementById('links');
-    var key, LiElem, AnchorElem;
-    for (key in linksElement.children) {
-        if (linksElement.children[key].constructor === HTMLLIElement) {
-            elem = linksElement.children[key];
-            AnchorElem = elem.getElementsByTagName('a')[0];
-            links.push({
-                text: AnchorElem.innerText,
-                url: AnchorElem.href
-            });
-        }
-    }
-    console.log(pageTitle);
-    console.log(links);
-
 
     var colors = [];
     var bgColor;
@@ -28,7 +9,7 @@ var setColors;
     var cubeColors
     var cubes, plane, renderer;
 
-    setColors = function(input) {
+    var setColors = function(input) {
         colors = input.map(function(color) {
             return parseInt(color, 16);
         });
@@ -121,21 +102,9 @@ var setColors;
             }
         };
 
-        var gui = new dat.GUI();
         var actions = {
             getColors: getColors
         };
-        gui.add(actions, 'getColors');
-        if (DEBUG) {
-            gui.add(plane.rotation, 'x').min(0.1).max(10).step(0.025);
-            gui.add(plane.position, 'y', -200, 200, 10);
-            gui.add(vars.factor, 'x').min(0).max(1500).step(10);
-            gui.add(vars.factor, 'y').min(0).max(1500).step(10);
-            gui.add(vars.factor, 'z').min(0).max(1500).step(10);
-            gui.add(vars.multiplier, 'x').min(0).max(150).step(1);
-            gui.add(vars.multiplier, 'y').min(0).max(150).step(1);
-            gui.add(vars.multiplier, 'z').min(0).max(150).step(1);
-        }
 
         function animate(t) {
             var ct;
@@ -162,6 +131,20 @@ var setColors;
         document.body.appendChild(JSONPScript);
     };
 
+    var repaintButton = document.getElementById('repaint');
+    var repaintHandler = function(evt) {
+        evt.preventDefault();
+        getColors();
+        repaintButton.onclick = null;
+        this.innerText = 'Mixing...';
+    };
+    // JSONP callback for getting a palette from colourlovers API
+    var catchPalette = window.catchPalette = function(arr) {
+        setColors(arr[0].colors);
+        repaintButton.innerText = 'Repaint!';
+        repaintButton.onclick = repaintHandler;
+    };
+
     if (REMOTE) {
         getColors();
     } else {
@@ -175,10 +158,5 @@ var setColors;
             ]
         });
     }
-}());
 
-// JSONP callback for getting a palette from colourlovers API
-var catchPalette = function(arr) {
-    console.log('got colors ' + arr[0].colors.join(' '));
-    setColors(arr[0].colors);
-};
+}());
