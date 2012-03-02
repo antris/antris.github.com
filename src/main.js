@@ -9,6 +9,54 @@
     var planeColor;
     var cubeColors
     var cubes, plane, renderer;
+    var cubeConstants = {
+        factor: {
+            x: 940,
+            y: 1020,
+            z: 317
+        },
+        multiplier: {
+            x: 120,
+            y: 50,
+            z: 90
+        }
+    };
+    // Calculate the next hexadecimal number between a start value and an end value
+    var tweenHex = function(start, end) {
+        var pad = function(str, padStr, length) {
+            while (str.length < length) {
+                str = padStr + str;
+            }
+            return str;
+        }
+        var startHex = pad(start.toString(16), '0', 6);
+        var endHex = pad(end.toString(16), '0', 6);
+        var start = {
+            r: parseInt(startHex.substr(0, 2), 16),
+            g: parseInt(startHex.substr(2, 2), 16),
+            b: parseInt(startHex.substr(4, 2), 16)
+        };
+        var end = {
+            r: parseInt(endHex.substr(0, 2), 16),
+            g: parseInt(endHex.substr(2, 2), 16),
+            b: parseInt(endHex.substr(4, 2), 16)
+        };
+        var nudgeNumber = function(start, end) {
+            if (start < end) {
+                return start + 1;
+            } else if (start > end) {
+                return start - 1;
+            } else {
+                return end;
+            }
+        };
+        var result = {
+            r: pad(nudgeNumber(start.r, end.r).toString(16), '0', 2),
+            g: pad(nudgeNumber(start.g, end.g).toString(16), '0', 2),
+            b: pad(nudgeNumber(start.b, end.b).toString(16), '0', 2)
+        };
+        return parseInt(result.r + result.g + result.b, 16);
+    };
 
     var setColors = function(input) {
         newColors = input;
@@ -18,25 +66,22 @@
         }
     };
 
-
     var APPInit = function() {
-        renderer = new THREE.WebGLRenderer({ antialias: true });
 
-        // Canvas dimensions
         var width = document.body.clientWidth;
         var height = document.body.clientHeight;
 
+        renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(
             width,
             height
         );
         renderer.setClearColorHex(bgColor, 1.0);
         renderer.clear();
+
         var camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
         camera.position.y = 150;
         camera.position.z = 300;
-
-        var scene = new THREE.Scene();
 
         // Create cubes
         cubes = _.range(20);
@@ -67,76 +112,27 @@
         plane.position.y = -68;
         plane.receiveShadow = true;
 
-        // Add everything to scene
+        // Make a scene!
+        var scene = new THREE.Scene();
         scene.add(camera);
         _.each(cubes, function(cube) {
             scene.add(cube.mesh);
         });
         scene.add(light);
         scene.add(plane);
-        document.body.appendChild(renderer.domElement);
         camera.lookAt(scene.position);
-
-        var vars = {
-            factor: {
-                x: 940,
-                y: 1020,
-                z: 317
-            },
-            multiplier: {
-                x: 120,
-                y: 50,
-                z: 90
-            }
-        };
 
         var actions = {
             getColors: getColors
-        };
-
-        var tween = function(start, end) {
-            var pad = function(str, padStr, length) {
-                while (str.length < length) {
-                    str = padStr + str;
-                }
-                return str;
-            }
-            var startHex = pad(start.toString(16), '0', 6);
-            var endHex = pad(end.toString(16), '0', 6);
-            var start = {
-                r: parseInt(startHex.substr(0, 2), 16),
-                g: parseInt(startHex.substr(2, 2), 16),
-                b: parseInt(startHex.substr(4, 2), 16)
-            };
-            var end = {
-                r: parseInt(endHex.substr(0, 2), 16),
-                g: parseInt(endHex.substr(2, 2), 16),
-                b: parseInt(endHex.substr(4, 2), 16)
-            };
-            var nudge = function(start, end) {
-                if (start < end) {
-                    return start + 1;
-                } else if (start > end) {
-                    return start - 1;
-                } else {
-                    return end;
-                }
-            };
-            var result = {
-                r: pad(nudge(start.r, end.r).toString(16), '0', 2),
-                g: pad(nudge(start.g, end.g).toString(16), '0', 2),
-                b: pad(nudge(start.b, end.b).toString(16), '0', 2)
-            };
-            return parseInt(result.r + result.g + result.b, 16);
         };
 
         function animate(t) {
             var ct;
             _.each(cubes, function(cube) {
                 ct = t + cube.index * 200;
-                cube.mesh.position.x = Math.cos(ct/vars.factor.x) * vars.multiplier.x;
-                cube.mesh.position.y = Math.sin(ct/vars.factor.y) * vars.multiplier.y + 60;
-                cube.mesh.position.z = Math.sin(ct/vars.factor.z) * vars.multiplier.z;
+                cube.mesh.position.x = Math.cos(ct/cubeConstants.factor.x) * cubeConstants.multiplier.x;
+                cube.mesh.position.y = Math.sin(ct/cubeConstants.factor.y) * cubeConstants.multiplier.y + 60;
+                cube.mesh.position.z = Math.sin(ct/cubeConstants.factor.z) * cubeConstants.multiplier.z;
                 cube.mesh.rotation.x = ct/500;
                 cube.mesh.rotation.y = ct/800;
                 cube.mesh.scale.x = 0.2 + Math.sin(ct / 1000) * 0.1;
@@ -144,10 +140,10 @@
                 cube.mesh.scale.z = 0.2 + Math.sin(ct / 1000) * 0.1;
             });
             if (!_.isEqual(colors, newColors)) {
-                bgColor = colors[0] = tween(colors[0], newColors[0]);
-                planeColor = colors[1] = tween(colors[1], newColors[1]);
+                bgColor = colors[0] = tweenHex(colors[0], newColors[0]);
+                planeColor = colors[1] = tweenHex(colors[1], newColors[1]);
                 cubeColors = _.map(newColors.slice(2), function(color, index) {
-                    return colors[index + 2] = tween(colors[index + 2], color);
+                    return colors[index + 2] = tweenHex(colors[index + 2], color);
                 });
                 plane.material.color.setHex(planeColor);
                 renderer.setClearColorHex(bgColor, 1.0);        
@@ -158,6 +154,8 @@
             renderer.render(scene, camera);
             window.requestAnimationFrame(animate, renderer.domElement);
         };
+
+        document.body.appendChild(renderer.domElement);
         animate(new Date().getTime());
     };
 
