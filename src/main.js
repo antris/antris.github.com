@@ -172,7 +172,7 @@
         evt.preventDefault();
         getColors();
         repaintButton.onclick = null;
-        this.innerHTML = 'Mixing paints...';
+        this.innerHTML = 'Mixing paint...';
     };
     // JSONP callback for getting a palette from colourlovers API
     var catchPalette = window.catchPalette = function(arr) {
