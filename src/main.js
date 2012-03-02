@@ -122,10 +122,6 @@
         scene.add(plane);
         camera.lookAt(scene.position);
 
-        var actions = {
-            getColors: getColors
-        };
-
         function animate(t) {
             var ct;
             _.each(cubes, function(cube) {
@@ -189,4 +185,7 @@
         });
     }
 
+    // Protect email
+    var emailElem = document.getElementById('email');
+    emailElem.href = emailElem.href.replace(/x/g, '');
 }());
