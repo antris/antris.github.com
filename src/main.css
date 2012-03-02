@@ -17,6 +17,7 @@ body {
 }
 #content, a {
 	color: #ffffff;
+	text-shadow: #000 1px 1px;
 }
 #content button {
 	-webkit-appearance: none;
