@@ -1,0 +1,18 @@
+body {
+  width: 800px;
+}
+#main {
+  font-size: 12px;
+  color: #333;
+  font-family: Lato, Helvetica, sans-serif;
+  background: #ffffff url(boltsi.gif) no-repeat 80px 0;
+  background-size: 121px 121px;
+  min-height: 121px;
+  padding: 0 0 0 270px;
+}
+h1 {
+  margin-top: 50px;
+}
+a {
+  color: #4058A2;
+}
